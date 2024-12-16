@@ -10,7 +10,7 @@ h3 {
 .chat-sidebar {
     height: 100vh;
     border-right: 1px solid #092E28;
-    background-color: #12392d;
+    background-color: #1d3d38;
     overflow-y: auto;
 }
 
@@ -91,10 +91,10 @@ h3 {
 
 .btn-send {
     height: auto;
-    background-color: #258171;
+    background-color: #1d7667;
     border: none;
-    padding: 10px 18px;
-    border-radius: 24px;
+    padding: 13.25px 18px;
+    border-radius: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -244,11 +244,11 @@ h3 {
 }
 
 .message.received {
-    max-width: calc(100% - 150px);
+    max-width: calc(100% - 250px);
 }
 
 .message.sent {
-    max-width: calc(100% - 150px);
+    max-width: calc(100% - 250px);
     margin-left: auto;
 }
 
@@ -303,4 +303,140 @@ h3 {
 .time-separator {
     color: #6d807d;
     font-size: 16px;
+}
+
+.file-preview {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Untuk mengatur agar elemen benar-benar di tengah */
+    z-index: 1000;       /* Pastikan z-index lebih besar dari elemen lainnya */
+    background: #253633;   /* Tambahkan background putih agar konten di bawahnya tidak terlihat */
+    border: 1px solid #222d2b;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    height: 90%;
+    max-width: 1100px;
+}
+
+.btn-clear-preview {
+    background-color: rgb(0, 0, 0, 0);
+    border-color: rgb(0, 0, 0, 0);
+    border-radius: 12px 0 0 0;
+}
+
+.preview-container {
+    height: 310px;
+}
+
+.file-list {
+    gap: 12px;
+    margin-left: 10px;
+    margin-top: 10px;
+    width: 800px;
+    overflow-x: auto; 
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.btn-send-file {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    margin-top: 10px;
+    background-color: #1d7667;
+}
+
+.btn-send-file i {
+    font-size: 28px;
+    color: white;
+}
+
+.file-thumbnail {
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+    min-height: 100px;
+}
+
+.file-name, .file-size {
+    text-align: center;
+    margin: 10px 0;
+    color: white;
+}
+
+.file-icon{
+    font-size: 80px;
+    margin: 10px 0;
+    color: white;
+}
+
+.caption-input {
+    resize: none; /* Prevent manual resizing */
+    overflow-y: auto; /* Allow vertical scrolling if content overflows */
+    height: 60px;
+    width: 140vh;
+    border-radius: 8px;
+    border: none;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px 16px;
+    font-size: 16px;
+    color: #e2f6f3;
+    background-color: #315952;
+    align-items: center;
+}
+.caption-input::placeholder {
+    color: #6d918b;
+}
+
+.caption-input:focus {
+    outline: none;
+    box-shadow: none;
+    background-color: #315952;
+    color: #e2f6f3;
+    align-items: center;
+}
+
+.image-bubble, .video-bubble {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    border-radius: 10px;
+}
+
+.overlay-video {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    color: white;
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    font-weight: bold;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    padding: 8px 12px;
+}
+
+.file-content {
+    background-color: rgb(47, 73, 68, 0.6);
+    border-radius: 10px;
+}
+
+.file-content-icon {
+    background-color: rgb(47, 73, 68, 0.6);
+    border-radius: 10px;
 }

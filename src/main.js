@@ -35,12 +35,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function fetchContact() {
+        try {
+            const responseContact = await fetch("http://localhost:3003/api/contacts");
+            const contact = await responseContact.json();
+
+            return contact;
+        } catch (error) {
+            console.error('Error fetching contact info:', error);
+        }
+    }
+
     // Fetch chatroom data and display it in the sidebar
     async function fetchChatrooms() {
         console.log("Fetching chatrooms...");
         try {
             const response = await fetch("http://localhost:3003/api/chatrooms");
             const chatrooms = await response.json();
+
+            const contacts = await fetchContact();
 
             // Check for drafts and add a `hasDraft` property
             chatrooms.forEach(chatroom => {
@@ -51,18 +64,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // Sort chatrooms: prioritize those with drafts
             chatrooms.sort((a, b) => b.hasDraft - a.hasDraft);
 
-            displayChatrooms(chatrooms);
+            displayChatrooms(chatrooms, contacts);
         } catch (error) {
             console.error('Error fetching chatrooms:', error);
         }
     }
 
     // Display chatrooms list in the sidebar
-    function displayChatrooms(chatrooms) {
+    function displayChatrooms(chatrooms, contacts) {
         const chatroomsList = document.getElementById('chatrooms-list');
         chatroomsList.innerHTML = '';  // Clear the list
     
         chatrooms.forEach(chatroom => {
+            console.log("Chatrooms data:", chatroom);
+
             // Check if chatID and messages are defined before processing
             if (!chatroom.chatID || !chatroom.messages) {
                 console.warn("Skipping chatroom with missing data:", chatroom);
@@ -70,9 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             const chatID = chatroom.chatID;
-            const contact = formatContactName(chatroom);
+            const chatName = formatContactName(chatID, contacts);
             const lastTime = formatLastChatTime(chatroom.last_time);
-            const chatroomItem = createChatroomItem(chatroom, contact, lastTime);
+            const chatroomItem = createChatroomItem(chatroom, chatName, lastTime);
             
             chatroomsList.appendChild(chatroomItem);
         });
@@ -102,16 +117,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         } else {
-            chatroomItem.innerHTML = `
-                <img src="./img/default-profile-picture-01.png" alt="Profile" class="profile-pic">
-                <div class="row w-100">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="contact-name mb-1">${contact}</h5>
-                        <small class="last-time">${lastTime}</small>
+            if (chatroom.hasMedia) {
+                chatroomItem.innerHTML = `
+                    <img src="./img/default-profile-picture-01.png" alt="Profile" class="profile-pic">
+                    <div class="row w-100">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="contact-name mb-1">${contact}</h5>
+                            <small class="last-time">${lastTime}</small>
+                        </div>
+                        <p class="message-preview mb-1"><i class="bi bi-camera"></i> Media</p>
                     </div>
-                    <p class="message-preview mb-1">${formatMsg(chatroom.last_chat)}</p>
-                </div>
-            `;
+                `;
+            } else {
+                chatroomItem.innerHTML = `
+                    <img src="./img/default-profile-picture-01.png" alt="Profile" class="profile-pic">
+                    <div class="row w-100">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="contact-name mb-1">${contact}</h5>
+                            <small class="last-time">${lastTime}</small>
+                        </div>
+                        <p class="message-preview mb-1">${formatMsg(chatroom.last_chat)}</p>
+                    </div>
+                `;
+            }
+            
         }
 
         chatroomItem.dataset.remoteId = chatroom.chatID;
@@ -162,12 +191,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Format contact name based on chat ID
-    function formatContactName(chatroom) {
-        if (chatroom.chatID.includes("@c.us") && chatroom.notifyName != null) {
-            return chatroom.notifyName;
-        } else {
-            return chatroom.chatID.split('@')[0] || "Unknown Contact";
+    function formatContactName(chatID, contacts) {
+        for (let i = 0; i < contacts.length; i++){
+            if (contacts[i].uid === chatID) {
+                return contacts[i].name;
+            }
         }
+        return chatID.split('@')[0]
     }
 
     // Format the timestamp for last chat time display
@@ -346,7 +376,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Display chat history in chat body
-    function displayChatHistory(messages) {
+    async function displayChatHistory(messages) {
+        const contacts = await fetchContact();
+
         if (messages.length === 0) {
             chatBody.innerHTML = '<p>No chat history available.</p>';
             return;
@@ -379,10 +411,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageContainer.innerHTML = `
                     <div class="message received d-flex justify-content-start">
                         <div class="d-flex">
-                            <img src="./img/default-profile-picture-01.png" alt="${msg.notifyName || msg.from.split('@')[0]}'s profile picture" class="profile-chat">
+                            <img src="./img/default-profile-picture-01.png" alt="${formatContactName(msg.author, contacts)}'s profile picture" class="profile-chat">
                         </div>
                         <div class="d-flex flex-column">
-                            <div class="notify-name">${msg._data.notifyName || msg.from.split('@')[0]}</div>
+                            <div class="notify-name">${formatContactName(msg.author, contacts)}</div>
                             <div class="message-bubble">
                                 <div class="message-body">${formatMsg(msg.body)}<div>
                                 <small class="timestamp">${formatTimestamp(msg.timestamp)}</small>
@@ -400,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (msg._data.quotedParticipant === thisUserID) {
                         quotedParticipant = "You";
                     } else {
-                        quotedParticipant = msg._data.quotedParticipant.split('@')[0];
+                        quotedParticipant = formatContactName(msg._data.quotedParticipant, contacts);
                     }
 
                     quotedMessage.innerHTML = `
@@ -430,9 +462,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     messageBubble.appendChild(quotedMessage);
                 }
-                messageBubble.innerHTML = `
-                    <div class="message-body">${formatMsg(msg.body)}<div>
-                `;
+
+                if (msg.hasMedia) {
+                    createFileElement(msg.files, messageBubble, messageDiv);
+                }
+
+                if (msg.body != null) {
+                    const messageBody = document.createElement('div');
+                    messageBody.classList.add('message-body');
+                    messageBody.innerHTML = `${formatMsg(msg.body)}`;
+                    messageBubble.appendChild(messageBody);
+                }
 
                 const timestamp = document.createElement('small');
                 timestamp.classList.add('timestamp');
@@ -493,10 +533,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function sendMessage() {
         const messageContent = chatInputField.value.trim();
-        const files = mediaInput.files;
 
-        if (messageContent && files.length === 0) {
+        if (messageContent === null) {
             console.warn("Input field is empty");
+            return;
         }
 
         const ID = generateID();
@@ -530,10 +570,6 @@ document.addEventListener('DOMContentLoaded', () => {
             fromMe: true,
         }
 
-        if (files.length > 0) {
-            messageData.hasMedia = true;
-        }
-
         try {
             const response = await fetch(`http://localhost:3003/api/send`, {
                 method: "POST",
@@ -545,11 +581,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const errorDetails = await response.json();
-                throw new Error(`Error mengirim pesan: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
             }
     
             const result = await response.json();
-            console.log("Pesan berhasil dikirim:", result);
+            console.log("Message sended successfully:", result);
 
             // Tampilkan pesan setelah berhasil mengirim
             loadChatHistory(currentChatroomID);
@@ -560,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update tampilan list chatroom
             fetchChatrooms();
         } catch (error) {
-            console.error("Error saat mengirim pesan:", error);
+            console.error("Error sending message:", error);
         }
     }
 
@@ -578,30 +614,503 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle file selection
-    mediaInput.addEventListener("change", function (e) {
-        const file = e.target.files;
-
-        if (file.length) {
-            Array.from(file).forEach(file => {
-                console.log = `Attach file: ${file.name}`;
-
-                const fileType = file.type;
-                if (fileType.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const img = document.createElement('img');
-                        img.src = reader.result;
-                        img.alt = file.name;
-                        img.style.maxWidth = "100px"; // Resize for preview
-                        chatInputField.appendChild(img);
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    const filePreview = document.createElement('p');
-                    filePreview.textContent = `File: ${file.name}`;
-                    chatInputField.appendChild(filePreview);
-                }
-            });
-        }
+    mediaInput.addEventListener("change", (e) => {
+        handleFiles(e.target.files);
     });
+
+    let fileCount = 0;
+    let fileIndex = 0;
+    function handleFiles(files) {
+        const container = document.querySelector('.container-fluid');
+        fileCount += files.length;
+
+        let preview = document.querySelector('.file-preview');
+        if (!preview) {
+            preview = document.createElement("div");
+            preview.classList.add('file-preview', 'col-md-8', 'p-0', 'w-100', 'justify-content-center');
+            preview.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <button class="btn btn-clear-preview btn-danger d-flex align-items-center justify-content-center">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="preview-container d-flex align-items-center justify-content-center">
+                    <!-- Insert single file preview here -->
+                </div>
+                <div class="caption d-flex align-items-center justify-content-center text-center">
+                    <textarea 
+                        class="caption-input form-control justify-content-center me-2"
+                        id="caption-input-form" 
+                        placeholder="Add a caption"
+                        rows="1"></textarea>
+                </div>
+                <div class="container">
+                    <div class="d-flex justify-content-center" style="gap: 24px;">
+                        <div class="file-list d-flex align-items-center justify-content-center" id="fileListContainer">
+                            <!-- File list -->
+                        </div>
+                        <button class="btn btn-send-file btn-success d-flex align-items-center justify-content-center">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(preview);
+
+            let dropbox1 = document.querySelector('.file-preview');
+            dropbox1.addEventListener("dragenter", dragenter, false);
+            dropbox1.addEventListener("dragover", dragover, false);
+            dropbox1.addEventListener("drop", drop, false);
+        }
+
+        const fileListContainer = document.getElementById("fileListContainer");
+
+        document.querySelector('.btn-clear-preview').addEventListener("click", () => {
+            document.querySelector('.file-preview').remove();
+            document.getElementById("mediaInput").value = "";
+            fileCount = 0;
+            fileIndex = 0;
+        });
+
+        document.querySelector('.btn-send-file').addEventListener("click", () => {
+            sendFile();
+            document.querySelector('.file-preview').remove();
+        });
+
+        console.log(fileCount);
+        let padding = 0;
+        if (fileCount === 8) {
+            padding = 85;
+            fileListContainer.style.paddingLeft = `${padding}px`;
+        } else if (fileCount === 9) {
+            padding = 200;
+            fileListContainer.style.paddingLeft = `${padding}px`;
+        } else if (fileCount > 9) {
+            padding = calc(200 + 112 * (fileCount - 9));
+            fileListContainer.style.paddingLeft = `${padding}px`;
+        }
+        
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+        
+            // Jika file adalah image
+            if (file.type.startsWith("image/")) {
+                reader.onload = function (e) {
+                    const button = document.createElement("button");
+                    button.classList.add('btn', 'file-thumbnail', 'btn-outline-success', 'align-items-center');
+                    button.style.backgroundImage = `url('${e.target.result}')`;
+                    button.style.backgroundSize = "auto 110px";
+                    button.style.backgroundRepeat = "no-repeat";
+                    button.style.backgroundPosition = "center";
+                    button.dataset.index = fileIndex;
+                    fileIndex++;
+                    button.innerHTML = `
+                        <span class="remove-media d-none">X</span>
+                    `;
+        
+                    button.addEventListener("click", () => {
+                        showFullPreview(file, e.target.result);
+                    });
+        
+                    fileListContainer.appendChild(button);
+        
+                    // Menampilkan preview pertama kali
+                    if (index === 0) {
+                        showFullPreview(file, e.target.result);
+                    }
+                };
+                reader.readAsDataURL(file);
+            } 
+            // Jika file bukan image
+            else {
+                const button = document.createElement("button");
+                button.classList.add('btn', 'file-thumbnail', 'btn-outline-success', 'align-items-center');
+                button.dataset.index = fileIndex;
+                fileIndex++;
+                button.innerHTML = `
+                    <i class="bi bi-file-earmark-text" style="font-size: 28px;"></i>
+                    <span class="remove-media d-none">X</span>
+                `;
+        
+                button.addEventListener("click", () => {
+                    showFullPreviewNonImage(file);
+                });
+        
+                fileListContainer.appendChild(button);
+        
+                // Menampilkan preview pertama kali untuk non-image
+                if (index === 0) {
+                    showFullPreviewNonImage(file);
+                }
+            }
+        });        
+    }
+    
+    function showFullPreview(file, src) {
+        // Logic to show full preview in a modal or a new container
+        console.log("Previewing file:", file.name);
+        const previewContainer = document.querySelector('.preview-container');
+        previewContainer.innerHTML = `
+            <div class="preview-file">
+                <img src="${src}" alt="${file.name}" style="width: auto; height: auto; max-width:90vh; max-height: 310px;">
+            </div>
+        `;
+    }
+
+    function showFullPreviewNonImage(file) {
+        // Logic to show full preview in a modal or a new container
+        console.log("Previewing file:", file.name);
+        const previewContainer = document.querySelector('.preview-container');
+        previewContainer.innerHTML = `
+            <div class="preview-file justify-content-center align-items-center text-center">
+                <h4 class="file-name">${file.name}</h4>
+                <i class="file-icon bi bi-file-earmark-text"></i>
+                <p class="file-size">${formatFileSize(file.size)}</p>
+            </div>
+        `;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes"; // Jika ukuran file 0
+        
+        const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024)); // Menentukan indeks satuan
+        const formattedSize = (bytes / Math.pow(1024, i)).toFixed(2); // Membagi ukuran file dan membulatkan 2 desimal
+        
+        return `${formattedSize} ${sizes[i]}`;
+    }
+
+    // Handle drag and drop
+    let dropbox;
+
+    dropbox = document.querySelector('.chat-main');
+    dropbox.addEventListener("dragenter", dragenter, false);
+    dropbox.addEventListener("dragover", dragover, false);
+    dropbox.addEventListener("drop", drop, false);
+
+    function dragenter(e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    function dragover(e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    function drop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (currentChatroomID != null) {
+            handleFiles(files);
+
+            const dataTransfer = new DataTransfer();
+            [...files].forEach(file => dataTransfer.items.add(file));
+            mediaInput.files = dataTransfer.files;
+        } else {
+            document.getElementById("mediaInput").value = "";
+            alert("No chat room currently selected");
+        }
+    }
+
+    async function sendFile() {
+        console.log(mediaInput.files.length, currentChatroomID);
+        if (mediaInput.files.length > 0 && currentChatroomID != null) {
+            const formData = new FormData();
+            const messageContent = document.getElementById("caption-input-form").value.trim();
+
+            // Add files to formData
+            Array.from(mediaInput.files).forEach(file => {
+                formData.append("files", file);
+            });
+            formData.append("chatroomID", currentChatroomID);
+            const time = Math.floor(Date.now() / 1000);
+            formData.append("timestamp", time);
+
+            const ID = generateID();
+
+            const messageData = {
+                _data: {
+                    id: {
+                        fromMe: true,
+                        remote: currentChatroomID,
+                        id: ID,
+                        _serialized: `true_${currentChatroomID}_${ID}`,
+                    },
+                    body: messageContent,
+                    type: "chat",
+                    t: time,
+                    from: thisUserID,
+                    to: currentChatroomID,
+                },
+                localId: {
+                    fromMe: true,
+                    remote: currentChatroomID,
+                    id: ID,
+                    _serialized: `true_${currentChatroomID}_${ID}`,
+                },
+                mediaKey: `${currentChatroomID}_${time}`,
+                hasMedia: true,
+                body: messageContent,
+                type: "chat",
+                timestamp: time,
+                from: thisUserID,
+                to: currentChatroomID,
+                deviceType: "web",
+                fromMe: true,
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3003/api/send-file`, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const responseMes = await fetch(`http://localhost:3003/api/send`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(messageData),
+                });
+
+                if (!responseMes.ok) {
+                    const errorDetails = await responseMes.json();
+                    throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                }
+
+                if (!response.ok) {
+                    alert("Failed sending file(s)");
+                    const errorDetails = await response.json();
+                    throw new Error(`Error sending file(s): ${errorDetails.error || response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log("Message sended successfully:", result);
+    
+                loadChatHistory(currentChatroomID);
+                mediaInput.value = "";
+                fetchChatrooms();
+            } catch (error) {
+                console.error("Error sending file(s):", error);
+            }
+        } else {
+            alert("No files selected or chatroom not selected.");
+        }
+    }
+
+    function createFileElement(files, messageBubble, messageDiv) {
+        const imageFiles = files.filter(file => file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/"));
+        const otherFiles = files.filter(file => !file.mimetype.startsWith("image/") && !file.mimetype.startsWith("video/"));
+        let totalIndex = 0;
+        console.log(otherFiles);
+
+        imageFiles.forEach((file) => {
+            const newBubble = document.createElement('div');
+            newBubble.classList.add('message-bubble');
+
+            const fileContent = document.createElement('div');
+            fileContent.classList.add('image-video-content');
+            if (file.mimetype.startsWith("image/")) {
+                const img = document.createElement('img');
+                img.classList.add('image-bubble');
+                img.src = file.path;
+                fileContent.appendChild(img);
+
+                fileContent.addEventListener("click", ()=> {
+                    imagePreview(file);
+                });
+            } else {
+                const thumbnail = document.createElement('img');
+                thumbnail.classList.add('video-bubble');
+                thumbnail.src = './img/default-thumbnail.png';  // Default thumbnail
+                generateVideoThumbnail(file.path, function(thumbnailUrl) {
+                    thumbnail.src = thumbnailUrl;
+                });
+
+                const overlayVideo = document.createElement('div');
+                overlayVideo.classList.add('overlay-video');
+                overlayVideo.innerHTML = `
+                    <span class="play-overlay"><i class="bi bi-play-circle"></i></span>
+                `;
+                fileContent.appendChild(thumbnail);
+                fileContent.appendChild(overlayVideo);
+
+                fileContent.addEventListener("click", ()=> {
+                    videoPreview(file);
+                });
+            }
+
+            if (totalIndex === files.length - 1) {
+                messageBubble.appendChild(fileContent);
+            } else {
+                newBubble.appendChild(fileContent);
+                messageDiv.appendChild(newBubble);
+                chatBody.appendChild(messageDiv);
+            }
+
+            totalIndex++;
+        });
+
+        otherFiles.forEach((file) => {
+            const fileContent = document.createElement('div');
+            fileContent.classList.add('file-content', 'd-flex', 'justify-content-between');
+            fileContent.innerHTML = `
+                <div class="d-flex file-content-icon">
+                    <i class="bi bi-file-earmark-text" style="font-size: 28px;"></i>
+                </div>
+                <div class="d-flex flex-column text-start ms-3">
+                    <div class="chat-file-name">${file.filename}</div>
+                    <div class="file-information">
+                        <div class="chat-file-size">${file.size}<div>
+                    </div>
+                </div>
+                <div class="d-flex file-content-download">
+                    <button class="btn btn-download-file btn-outline-success d-flex align-items-center justify-content-center">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+            `;
+
+            document.querySelector('.btn-download-file').addEventListener("click", () => {
+                downloadFile(file);
+            });
+
+            if (totalIndex === files.length - 1) {
+                messageBubble.appendChild(fileContent);
+                console.log(messageBubble.innerHTML);
+            } else {
+                newBubble.appendChild(fileContent);
+                messageDiv.appendChild(newBubble);
+                chatBody.appendChild(messageDiv);
+            }
+
+            totalIndex++;
+        });
+    }
+
+    function generateVideoThumbnail(videoUrl, callback) {
+        const video = document.createElement('video');
+        video.src = videoUrl;
+        video.currentTime = 1;  // Set to 1 second to ensure the video has loaded and can be captured
+    
+        video.onloadeddata = function () {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Draw the current frame of the video on the canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Convert the canvas to a data URL
+            const thumbnail = canvas.toDataURL('image/png');
+            callback(thumbnail);  // Call the callback function with the thumbnail image
+        };
+    }
+
+    function imagePreview(file){
+        const container = document.querySelector('.container-fluid');
+
+        let preview = document.querySelector('.file-preview');
+        if (!preview) {
+            preview = document.createElement("div");
+            preview.classList.add('file-preview', 'col-md-8', 'p-0', 'w-100', 'justify-content-center');
+            preview.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <button class="btn btn-clear-preview btn-danger d-flex align-items-center justify-content-center">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="d-flex align-items-end justify-content-end">
+                    <button class="btn btn-download btn-outline-success d-flex align-items-center justify-content-center">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+                <div class="image-preview-container d-flex align-items-center justify-content-center">
+                    <!-- Insert single file preview here -->
+                    <div class="preview-file d-flex align-items-center justify-content-center">
+                        <img src="${file.path}" alt="${file.filename}" style="width: auto; height: auto; max-width:95vh; max-height: 450px;">
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(preview);
+        }
+        
+        document.querySelector('.btn-clear-preview').addEventListener("click", () => {
+            document.querySelector('.file-preview').remove();
+        });
+        
+        document.querySelector('.btn-download').addEventListener("click", () => {
+            downloadFile(file)
+        });
+    }
+
+    function videoPreview(file){
+        const container = document.querySelector('.container-fluid');
+
+        let preview = document.querySelector('.file-preview');
+        if (!preview) {
+            preview = document.createElement("div");
+            preview.classList.add('file-preview', 'col-md-8', 'p-0', 'w-100', 'justify-content-center');
+            preview.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <button class="btn btn-clear-preview btn-danger d-flex align-items-center justify-content-center">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="d-flex align-items-end justify-content-end">
+                    <button class="btn btn-download btn-outline-success d-flex align-items-center justify-content-center">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+                <div class="video-preview-container d-flex align-items-center justify-content-center">
+                    <!-- Insert single file preview here -->
+                    <div class="preview-file">
+                        <video id="video-element" height="800" controls>
+                            <source id="video-source" src=${file.path} type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(preview);
+        }
+        
+        document.querySelector('.btn-clear-preview').addEventListener("click", () => {
+            document.getElementById("video-element").pause();
+            document.getElementById("video-source").src = "";
+            document.querySelector('.file-preview').remove();
+        });
+
+        document.querySelector('.btn-download').addEventListener("click", () => {
+            downloadFile(file)
+        });
+    }
+
+    function downloadFile(file) {
+        console.log(updatedName);
+        if (!file.updatedName) {
+            console.error("File information is incomplete");
+            return;
+        }
+
+        const downloadUrl = `http://localhost:3003/download/${file.updatedName}`;
+
+        // Create <a> to trigger download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = file.updatedName; // Nama file yang akan diunduh
+
+        // Add <a> to DOM and triggers click event
+        document.body.appendChild(link);
+        link.click();
+
+        // Remove <a> after click event
+        document.body.removeChild(link);
+    }
 });
