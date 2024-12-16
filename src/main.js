@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchChatrooms() {
         console.log("Fetching chatrooms...");
         try {
-            const response = await fetch("http://localhost:3003/api/chatrooms");
+            const response = await fetch("http://wa-logger-backend-o1u2.vercel.app/api/chatrooms");
             const chatrooms = await response.json();
 
             const contacts = await fetchContact();
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Fetching chat history for " + remoteId);
         chatBody.innerHTML = '';
         try {
-            const response = await fetch(`http://localhost:3003/api/chats/${remoteId}`);
+            const response = await fetch(`http://wa-logger-backend-o1u2.vercel.app/api/chats/${remoteId}`);
             if (!response.ok) throw new Error(`Error fetching chat history: ${response.statusText}`);
             
             const messages = await response.json();
@@ -571,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:3003/api/send`, {
+            const response = await fetch(`http://wa-logger-backend-o1u2.vercel.app/api/send`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
