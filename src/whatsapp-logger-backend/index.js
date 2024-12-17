@@ -176,22 +176,17 @@ app.post("/api/send", async (req, res) => {
 
     // Validate required fields
     if (messageData.hasMedia) {
-      if (!messageData.timestamp) {
-        return res.status(400).json({ error: "Missing timestamp: hasMedia" });
-      } else if (!messageData.from) {
-        return res.status(400).json({ error: "Missing from: hasMedia" });
-      } else if (!messageData.to) {
-        return res.status(400).json({ error: "Missing to: hasMedia" });
+      if (!messageData.timestamp || !messageData.from || !messageData.to) {
+        return res.status(400).json({ error: "Missing required fields" });
       }
     } else {
-      if (!messageData.body) {
-        return res.status(400).json({ error: "Missing body" });
-      } else if (!messageData.timestamp) {
-        return res.status(400).json({ error: "Missing timestamp" });
-      } else if (!messageData.from) {
-        return res.status(400).json({ error: "Missing from" });
-      } else if (!messageData.to) {
-        return res.status(400).json({ error: "Missing to" });
+      if (
+        !messageData.body ||
+        !messageData.timestamp ||
+        !messageData.from ||
+        !messageData.to
+      ) {
+        return res.status(400).json({ error: "Missing required fields" });
       }
     }
 
@@ -227,7 +222,7 @@ app.post("/api/send-file", upload.array("files"), async (req, res) => {
     const files = req.files.map((file) => ({
       filename: file.originalname,
       updatedName: file.filename,
-      path: `http://localhost:3003/uploads/${file.filename}`, // Menggunakan filename yang sudah diubah sebelumnya
+      path: `https://wa-logger-back.vercel.app/uploads/${file.filename}`, // Menggunakan filename yang sudah diubah sebelumnya
       mimetype: file.mimetype,
       size: file.size,
       uploadedAt: timestamp,
