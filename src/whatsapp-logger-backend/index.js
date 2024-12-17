@@ -177,8 +177,12 @@ app.post("/api/send", async (req, res) => {
 
         // Validate required fields
         if (messageData.hasMedia){
-            if (!messageData.timestamp || !messageData.from || !messageData.to) {
-                return res.status(400).json({ error: 'Missing required fields' });
+            if ( !messageData.timestamp ){
+                return res.status(400).json({ error: 'Missing timestamp: hasMedia' });
+            } else if ( !messageData.from ){
+                return res.status(400).json({ error: 'Missing from: hasMedia' });
+            } else if ( !messageData.to ){
+                return res.status(400).json({ error: 'Missing to: hasMedia' });
             }
         } else {
             if (!messageData.body){
