@@ -37,7 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchContact() {
     try {
-      const responseContact = await fetch(`${BACKEND_URL}/api/contacts`);
+      const responseContact = await fetch(
+        `http://wa-logger-back.vercel.app/api/contacts`
+      );
       const contact = await responseContact.json();
 
       return contact;
@@ -50,7 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchChatrooms() {
     console.log("Fetching chatrooms...");
     try {
-      const response = await fetch(`${BACKEND_URL}/api/chatrooms`);
+      const response = await fetch(
+        `http://wa-logger-back.vercel.app/api/chatrooms`
+      );
       const chatrooms = await response.json();
 
       const contacts = await fetchContact();
@@ -395,7 +399,9 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Fetching chat history for " + remoteId);
     chatBody.innerHTML = "";
     try {
-      const response = await fetch(`${BACKEND_URL}/api/chats/${remoteId}`);
+      const response = await fetch(
+        `http://wa-logger-back.vercel.app/api/chats/${remoteId}`
+      );
       if (!response.ok)
         throw new Error(`Error fetching chat history: ${response.statusText}`);
 
@@ -648,13 +654,16 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/send`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(messageData),
-      });
+      const response = await fetch(
+        `http://wa-logger-back.vercel.app/api/send`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(messageData),
+        }
+      );
 
       if (!response.ok) {
         const errorDetails = await response.json();
@@ -963,18 +972,24 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/send-file`, {
-          method: "POST",
-          body: formData,
-        });
+        const response = await fetch(
+          `http://wa-logger-back.vercel.app/api/send-file`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
-        const responseMes = await fetch(`${BACKEND_URL}/api/send`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(messageData),
-        });
+        const responseMes = await fetch(
+          `http://wa-logger-back.vercel.app/api/send`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(messageData),
+          }
+        );
 
         if (!responseMes.ok) {
           const errorDetails = await responseMes.json();
@@ -1235,7 +1250,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const downloadUrl = `${BACKEND_URL}/download/${file.updatedName}`;
+    const downloadUrl = `http://wa-logger-back.vercel.app/download/${file.updatedName}`;
 
     // Create <a> to trigger download
     const link = document.createElement("a");
