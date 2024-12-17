@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchContact() {
     try {
       const responseContact = await fetch(
-        `http://wa-logger-back.vercel.app/api/contacts`
+        `https://wa-logger-back.vercel.app/api/contacts`
       );
       const contact = await responseContact.json();
 
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Fetching chatrooms...");
     try {
       const response = await fetch(
-        `http://wa-logger-back.vercel.app/api/chatrooms`
+        `https://wa-logger-back.vercel.app/api/chatrooms`
       );
       const chatrooms = await response.json();
 
@@ -400,7 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chatBody.innerHTML = "";
     try {
       const response = await fetch(
-        `http://wa-logger-back.vercel.app/api/chats/${remoteId}`
+        `https://wa-logger-back.vercel.app/api/chats/${remoteId}`
       );
       if (!response.ok)
         throw new Error(`Error fetching chat history: ${response.statusText}`);
@@ -655,7 +655,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        `http://wa-logger-back.vercel.app/api/send`,
+        `https://wa-logger-back.vercel.app/api/send`,
         {
           method: "POST",
           headers: {
@@ -973,7 +973,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         const response = await fetch(
-          `http://wa-logger-back.vercel.app/api/send-file`,
+          `https://wa-logger-back.vercel.app/api/send-file`,
           {
             method: "POST",
             body: formData,
@@ -981,7 +981,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         const responseMes = await fetch(
-          `http://wa-logger-back.vercel.app/api/send`,
+          `https://wa-logger-back.vercel.app/api/send`,
           {
             method: "POST",
             headers: {
@@ -1250,7 +1250,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const downloadUrl = `http://wa-logger-back.vercel.app/download/${file.updatedName}`;
+    const downloadUrl = `https://wa-logger-back.vercel.app/download/${file.updatedName}`;
 
     // Create <a> to trigger download
     const link = document.createElement("a");

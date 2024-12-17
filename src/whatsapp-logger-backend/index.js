@@ -222,7 +222,7 @@ app.post("/api/send-file", upload.array("files"), async (req, res) => {
     const files = req.files.map((file) => ({
       filename: file.originalname,
       updatedName: file.filename,
-      path: `http://wa-logger-back.vercel.app/uploads/${file.filename}`, // Menggunakan filename yang sudah diubah sebelumnya
+      path: `https://wa-logger-back.vercel.app/uploads/${file.filename}`, // Menggunakan filename yang sudah diubah sebelumnya
       mimetype: file.mimetype,
       size: file.size,
       uploadedAt: timestamp,
