@@ -241,15 +241,18 @@ h3 {
 
 .message {
     margin-bottom: 10px;
+    width: fit-content;
 }
 
 .message.received {
-    max-width: calc(100% - 250px);
+    max-width: calc(100% - 300px);
+    width: fit-content;
 }
 
 .message.sent {
-    max-width: calc(100% - 250px);
+    max-width: calc(100% - 300px);
     margin-left: auto;
+    width: fit-content;
 }
 
 .message-bubble {
@@ -399,9 +402,9 @@ h3 {
 }
 
 .image-bubble, .video-bubble {
-    width: auto;
     height: auto;
     max-width: 100%;
+    max-height: 500px;
     border-radius: 10px;
 }
 
@@ -431,9 +434,10 @@ h3 {
     padding: 8px 12px;
 }
 
-.file-content {
+.media-content {
     background-color: rgb(47, 73, 68, 0.6);
     border-radius: 10px;
+    width: fit-content;
 }
 
 .file-content-icon {
