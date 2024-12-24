@@ -919,6 +919,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: formData,
                 });
 
+                // Log the response before parsing it as JSON
+                const textResponse = await response.text();
+                console.log('Response Text:', textResponse);
+
+                let result;
+                try {
+                    result = JSON.parse(textResponse);
+                } catch (error) {
+                    console.error("Error parsing response as JSON:", error);
+                }
+
                 const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
                     method: "POST",
                     headers: {
