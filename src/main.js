@@ -923,9 +923,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const textResponse = await response.text();
                 console.log('Response Text:', textResponse);
 
-                let result;
+                let resultSendFile;
                 try {
-                    result = JSON.parse(textResponse);
+                    resultSendFile = JSON.parse(textResponse);
                 } catch (error) {
                     console.error("Error parsing response as JSON:", error);
                 }
