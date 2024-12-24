@@ -3,6 +3,7 @@ const cors = require("cors");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const mime = require('mime-types');
 const connectDB = require('./config/db');
 const Message = require("./models/chat");
 const File = require("./models/media");
@@ -13,18 +14,26 @@ const port = 3003;
 connectDB();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*', // Izinkan dari semua domain (atau tentukan domain frontend Anda)
+}));
 app.use(express.json());
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Atur asal yang diperbolehkan
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    req.url = decodeURIComponent(req.url);
-    next();
-});
 
 app.listen(port, () => {
     console.log(`Backend menggunakan express di port ${port}`);
+});
+
+app.use('/uploads', (req, res, next) => {
+    const filePath = path.join(__dirname, 'uploads', req.path);
+    if (fs.existsSync(filePath)) {
+        const mimeType = mime.lookup(filePath);
+        if (mimeType) {
+            res.setHeader('Content-Type', mimeType);
+        } else {
+            res.setHeader('Content-Type', 'application/octet-stream'); // Default untuk file yang tidak dikenali
+        }
+    }
+    next();
 });
 
 // Configure Multer to save files to a specific folder
@@ -236,7 +245,7 @@ app.post("/api/send-file", upload.array('files'), async (req, res) => {
         const files = req.files.map((file, index) => ({
             filename: file.originalname,
             storedName: file.filename,
-            path: `http://localhost:3003/uploads/${file.filename}`, // Menggunakan filename yang sudah diubah sebelumnya
+            path: `https://wa-logger-back.vercel.app/uploads/${file.filename}`, // Menggunakan filename yang sudah diubah sebelumnya
             mimetype: file.mimetype,
             size: file.size,
             uploadedAt: timestamp,
