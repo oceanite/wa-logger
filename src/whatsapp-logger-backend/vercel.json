@@ -1,4 +1,3 @@
-{
     "version": 2,
     "builds": [
       {
@@ -10,6 +9,24 @@
       {
         "src": "/(.*)",
         "dest": "index.js"
+      }
+    ],
+    "static": [
+      {
+        "source": "uploads",
+        "destination": "/uploads"
+      }
+    ],
+    "rewrites": [
+      { "source": "/uploads/(.*)", "destination": "/uploads/$1" }
+    ],
+    "headers": [
+      {
+        "source": "/uploads/(.*)",
+        "headers": [
+          { "key": "Content-Type", "value": "image/jpeg" },
+          { "key": "X-Content-Type-Options", "value": "nosniff" }
+        ]
       }
     ]
   }
