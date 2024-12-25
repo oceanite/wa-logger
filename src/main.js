@@ -867,36 +867,20 @@ document.addEventListener('DOMContentLoaded', () => {
     async function sendFile() {
         console.log(mediaInput.files.length, currentChatroomID);
         if (mediaInput.files.length > 0 && currentChatroomID != null) {
-            const files = [];
             const messageContent = document.getElementById("caption-input-form").value.trim();
             const time = Math.floor(Date.now() / 1000);
             let indexTotal = mediaInput.files.length - 1;
             const ID = generateID();
 
             // Proses file untuk diubah ke base64
-            Array.from(mediaInput.files).forEach(file => {
-                const reader = new FileReader();
+            const formData = new FormData();
+            formData.append("chatroomID", currentChatroomID);
+            formData.append("timestamp", time);
+            formData.append("total", indexTotal);
 
-                const fileBase64 = await new Promise((resolve, reject) => {
-                    reader.onload = () => resolve(reader.result.split(",")[1]); // Hanya mengambil konten base64
-                    reader.onerror = reject
-                    reader.readAsDataURL(file);
-                });
-
-                files.push({
-                    filename: file.name,
-                    content: fileBase64,
-                    mimetype: file.type,
-                    size: file.size,
-                });
+            Array.from(mediaInput.files).forEach((file) => {
+                formData.append("files", file); // Append file secara langsung
             });
-
-            const formData = {
-                chatroomID: currentChatroomID,
-                timestamp: time,
-                total: indexTotal,
-                files: files,
-            };
 
             const messageData = {
                 _data: {
@@ -932,10 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`https://wa-logger-back.vercel.app/api/send-file`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(formData),
+                    body: formData,
                 });
 
                 // Log the response before parsing it as JSON
