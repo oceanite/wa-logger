@@ -867,20 +867,36 @@ document.addEventListener('DOMContentLoaded', () => {
     async function sendFile() {
         console.log(mediaInput.files.length, currentChatroomID);
         if (mediaInput.files.length > 0 && currentChatroomID != null) {
-            const formData = new FormData();
+            const files = [];
             const messageContent = document.getElementById("caption-input-form").value.trim();
-
-            // Add files to formData
-            Array.from(mediaInput.files).forEach(file => {
-                formData.append("files", file);
-            });
-            formData.append("chatroomID", currentChatroomID);
             const time = Math.floor(Date.now() / 1000);
-            formData.append("timestamp", time);
             let indexTotal = mediaInput.files.length - 1;
-            formData.append("total", indexTotal);
-
             const ID = generateID();
+
+            // Proses file untuk diubah ke base64
+            for (const file of mediaInput.files) {
+                const reader = new FileReader();
+
+                const fileBase64 = await new Promise((resolve, reject) => {
+                    reader.onload = () => resolve(reader.result.split(",")[1]); // Hanya mengambil konten base64
+                    reader.onerror = reject
+                    reader.readAsDataURL(file);
+                });
+
+                files.push({
+                    filename: file.name,
+                    content: fileBase64,
+                    mimetype: file.type,
+                    size: file.size,
+                });
+            }
+
+            const formData = {
+                chatroomID: currentChatroomID,
+                timestamp: time,
+                total: indexTotal,
+                files: files,
+            };
 
             const messageData = {
                 _data: {
@@ -911,11 +927,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 to: currentChatroomID,
                 deviceType: "web",
                 fromMe: true,
-            }
+            };
 
             try {
-                const response = await fetch(`http://localhost:3003/api/send-file`, {
+                const response = await fetch(`https://wa-logger-back.vercel.app/api/send-file`, {
                     method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                     body: formData,
                 });
 
@@ -953,8 +972,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resultMes = await responseMes.json();
                 console.log("Message and file sended successfully:", result, resultMes);
     
-                loadChatHistory(currentChatroomID);
                 mediaInput.value = "";
+                loadChatHistory(currentChatroomID);
                 fetchChatrooms();
             } catch (error) {
                 console.error("Error sending file(s):", error);
