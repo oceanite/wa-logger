@@ -993,7 +993,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     imagePreview(file);
                 });
             } else if (file.mimetype.startsWith("video/")) {
-                generateVideoThumbnail(file.path, function (thumbnailUrl) {
+                const blobUrl = URL.createObjectURL(file);
+                generateVideoThumbnail(blobUrl, function (thumbnailUrl) {
                     const thumbnail = document.createElement('img');
                     thumbnail.classList.add('video-bubble');
                     console.log('Thumbnail URL:', thumbnailUrl);
