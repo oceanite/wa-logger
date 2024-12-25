@@ -914,7 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch(`http://wa-logger-back.vercel.app/api/send-file`, {
+                const response = await fetch(`https://wa-logger-back.vercel.app/api/send-file`, {
                     method: "POST",
                     body: formData,
                 });
