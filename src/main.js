@@ -677,9 +677,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.btn-send-file').addEventListener("click", () => {
             sendFile();
             document.querySelector('.file-preview').remove();
-            mediaInput.value = "";
-            loadChatHistory(currentChatroomID);
-            fetchChatrooms();
         });
 
         let padding = 0;
@@ -948,7 +945,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 const resultMes = await responseMes.json();
                 console.log("Message and file sended successfully:", result, resultMes);
-    
+
+                mediaInput.value = "";
+                loadChatHistory(currentChatroomID);
+                fetchChatrooms();
             } catch (error) {
                 console.error("Error sending file(s):", error);
             }
