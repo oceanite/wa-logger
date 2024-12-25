@@ -857,7 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const dataTransfer = new DataTransfer();
             [...files].forEach(file => dataTransfer.items.add(file));
-            mediaInput.files = dataTransfer.files;
+            mediaInput.files += dataTransfer.files;
         } else {
             document.getElementById("mediaInput").value = "";
             alert("No chat room currently selected");
@@ -873,84 +873,104 @@ document.addEventListener('DOMContentLoaded', () => {
             const ID = generateID();
 
             // Proses file untuk diubah ke base64
-            const formData = new FormData();
-            formData.append("chatroomID", currentChatroomID);
-            formData.append("timestamp", time);
-            formData.append("total", indexTotal);
+            const filesData = [];
+            for (const file of mediaInput.files) {
+                const reader = new FileReader();
+                reader.onload = async function (event) {
+                    const base64File = event.target.result.split(",")[1];
 
-            Array.from(mediaInput.files).forEach((file) => {
-                formData.append("files", file); // Append file secara langsung
-            });
+                    filesData.push({
+                        filename: file.name,
+                        content: base64File,
+                        mimetype: file.type,
+                        size: file.size,
+                    });
 
-            const messageData = {
-                _data: {
-                    id: {
-                        fromMe: true,
-                        remote: currentChatroomID,
-                        id: ID,
-                        _serialized: `true_${currentChatroomID}_${ID}`,
-                    },
-                    body: messageContent,
-                    type: "chat",
-                    t: time,
-                    from: thisUserID,
-                    to: currentChatroomID,
-                },
-                localId: {
-                    fromMe: true,
-                    remote: currentChatroomID,
-                    id: ID,
-                    _serialized: `true_${currentChatroomID}_${ID}`,
-                },
-                mediaKey: `${currentChatroomID}_${time}`,
-                hasMedia: true,
-                body: messageContent,
-                type: "chat",
-                timestamp: time,
-                from: thisUserID,
-                to: currentChatroomID,
-                deviceType: "web",
-                fromMe: true,
-            };
+                    // Jika semua file telah diproses kirim data
+                    if (filesData.length === mediaInput.files.length) {
+                        const jsonData = {
+                            chatroomID: currentChatroomID,
+                            timestamp: time,
+                            total: indexTotal,
+                            files: filesData,
+                        };
 
-            try {
-                const response = await fetch(`https://wa-logger-back.vercel.app/api/send-file`, {
-                    method: "POST",
-                    body: formData,
-                });
+                        const messageData = {
+                            _data: {
+                                id: {
+                                    fromMe: true,
+                                    remote: currentChatroomID,
+                                    id: ID,
+                                    _serialized: `true_${currentChatroomID}_${ID}`,
+                                },
+                                body: messageContent,
+                                type: "chat",
+                                t: time,
+                                from: thisUserID,
+                                to: currentChatroomID,
+                            },
+                            localId: {
+                                fromMe: true,
+                                remote: currentChatroomID,
+                                id: ID,
+                                _serialized: `true_${currentChatroomID}_${ID}`,
+                            },
+                            mediaKey: `${currentChatroomID}_${time}`,
+                            hasMedia: true,
+                            body: messageContent,
+                            type: "chat",
+                            timestamp: time,
+                            from: thisUserID,
+                            to: currentChatroomID,
+                            deviceType: "web",
+                            fromMe: true,
+                        };
 
-                // Log the response
-                const textResponse = await response.text();
-                console.log('Response Text:', textResponse);
+                        try {
+                            const response = await fetch(`https://wa-logger-back.vercel.app/api/send-file`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(jsonData),
+                            });
 
-                const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(messageData),
-                });
+                            // Log response
+                            const textResponse = await response.text();
+                            console.log('Response Text:', textResponse);
 
-                if (!response.ok) {
-                    alert("Failed sending file(s)");
-                    const errorDetails = await response.json();
-                    throw new Error(`Error sending file(s): ${errorDetails.error || response.statusText}`);
-                }
+                            const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(messageData),
+                            });
 
-                if (!responseMes.ok) {
-                    const errorDetails = await responseMes.json();
-                    throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                }
+                            if (!response.ok) {
+                                alert("Failed sending file(s)");
+                                const errorDetails = await response.json();
+                                throw new Error(`Error sending file(s): ${errorDetails.error || response.statusText}`);
+                            }
 
-                const result = await response.json();
-                const resultMes = await responseMes.json();
-                console.log("Message and file sended successfully:", result, resultMes);
+                            if (!responseMes.ok) {
+                                const errorDetails = await responseMes.json();
+                                throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                            }
 
-                mediaInput.value = "";
-                loadChatHistory(currentChatroomID);
-                fetchChatrooms();
-            } catch (error) {
-                console.error("Error sending file(s):", error);
+                            const result = await response.json();
+                            const resultMes = await responseMes.json();
+                            console.log("Message and file sended successfully:", result, resultMes);
+
+                            mediaInput.value = "";
+                            loadChatHistory(currentChatroomID);
+                            fetchChatrooms();
+                        } catch (error) {
+                            console.error("Error sending file(s):", error);
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
             }
         } else {
             alert("No files selected or chatroom not selected.");
