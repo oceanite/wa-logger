@@ -993,8 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     imagePreview(file);
                 });
             } else if (file.mimetype.startsWith("video/")) {
-                const blobUrl = URL.createObjectURL(file);
-                generateVideoThumbnail(blobUrl, function (thumbnailUrl) {
+                generateVideoThumbnail(file.path, function (thumbnailUrl) {
                     const thumbnail = document.createElement('img');
                     thumbnail.classList.add('video-bubble');
                     console.log('Thumbnail URL:', thumbnailUrl);
@@ -1050,7 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateVideoThumbnail(videoUrl, callback) {
         const video = document.createElement('video');
-        video.src = encodeURIComponent(videoUrl);
+        video.src = videoUrl;
         
         video.onloadeddata = function () {
             video.currentTime = 3; // Ambil frame di detik ke-3
