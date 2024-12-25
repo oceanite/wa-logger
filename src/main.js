@@ -894,6 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             total: indexTotal,
                             files: filesData,
                         };
+                        console.log(jsonData);
 
                         const messageData = {
                             _data: {
