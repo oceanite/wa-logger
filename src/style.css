@@ -258,6 +258,7 @@ h3 {
 .message-bubble {
     position: relative;
     padding: 4px 4px 20px 4px;
+    width: fit-content;
     min-width: 100px;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -412,6 +413,7 @@ h3 {
     background-color: rgb(47, 73, 68, 0.6);
     border-radius: 10px;
     width: fit-content;
+    max-width: 350px;
 }
 
 .file-content-icon, video-content-icon {
