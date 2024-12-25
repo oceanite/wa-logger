@@ -935,7 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: formData,
+                    body: JSON.stringify(formData),
                 });
 
                 // Log the response before parsing it as JSON
