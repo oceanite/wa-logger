@@ -874,7 +874,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ID = generateID();
 
             // Proses file untuk diubah ke base64
-            for (const file of mediaInput.files) {
+            Array.from(mediaInput.files).forEach(file => {
                 const reader = new FileReader();
 
                 const fileBase64 = await new Promise((resolve, reject) => {
@@ -889,7 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     mimetype: file.type,
                     size: file.size,
                 });
-            }
+            });
 
             const formData = {
                 chatroomID: currentChatroomID,
