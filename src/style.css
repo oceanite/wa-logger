@@ -440,7 +440,7 @@ h3 {
     width: fit-content;
 }
 
-.file-content-icon {
+.file-content-icon, video-content-icon {
     background-color: rgb(47, 73, 68, 0.6);
     border-radius: 10px;
 }
