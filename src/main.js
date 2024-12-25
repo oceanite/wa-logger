@@ -997,9 +997,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 thumbnail.classList.add('video-bubble');
                 thumbnail.src = './img/default-thumbnail.png';  // Default thumbnail
 
-                generateVideoThumbnail(file.path, function(thumbnailUrl) {
+                generateVideoThumbnail(URL.createObjectURL(file.path), function (thumbnailUrl) {
                     console.log('Thumbnail URL:', thumbnailUrl);
-                    thumbnail.src = thumbnailUrl;
+                    thumbnail.src = `${thumbnailUrl}`;
                 });
 
                 const overlayVideo = document.createElement('div');
