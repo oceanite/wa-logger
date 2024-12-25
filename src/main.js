@@ -1130,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <!-- Insert single file preview here -->
                     <div class="preview-file">
                         <video id="video-element" height="450" crossorigin="anonymous" controls>
-                            <source id="video-source" src="${encodeURIComponent(file.path)}" type="video/mp4">
+                            <source id="video-source" src="${file.path}" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
                     </div>
