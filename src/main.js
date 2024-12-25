@@ -874,7 +874,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Proses file untuk diubah ke base64
             const filesData = [];
-            for (const file of mediaInput.files) {
+            Array.from(mediaInput.files).forEach((file, idx) => {
                 const reader = new FileReader();
                 reader.onload = async function (event) {
                     const base64File = event.target.result.split(",")[1];
@@ -887,7 +887,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     // Jika semua file telah diproses kirim data
-                    if (filesData.length === mediaInput.files.length) {
+                    if (filesData.length === Array.from(mediaInput.files).length) {
                         const jsonData = {
                             chatroomID: currentChatroomID,
                             timestamp: time,
@@ -971,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 };
                 reader.readAsDataURL(file);
-            }
+            });
         } else {
             alert("No files selected or chatroom not selected.");
         }
