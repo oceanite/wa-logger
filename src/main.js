@@ -914,7 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch(`https://localhost:3003/api/send-file`, {
+                const response = await fetch(`http://localhost:3003/api/send-file`, {
                     method: "POST",
                     body: formData,
                 });
