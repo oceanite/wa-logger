@@ -993,13 +993,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     imagePreview(file);
                 });
             } else if (file.mimetype.startsWith("video/")) {
-                const thumbnail = document.createElement('img');
-                thumbnail.classList.add('video-bubble');
-                thumbnail.src = './img/default-thumbnail.png';  // Default thumbnail
-
                 generateVideoThumbnail(file.path, function (thumbnailUrl) {
+                    const thumbnail = document.createElement('img');
+                    thumbnail.classList.add('video-bubble');
                     console.log('Thumbnail URL:', thumbnailUrl);
                     thumbnail.src = `${thumbnailUrl}`;
+
+                    fileContent.appendChild(thumbnail);
                 });
 
                 const overlayVideo = document.createElement('div');
@@ -1007,7 +1007,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 overlayVideo.innerHTML = `
                     <span class="play-overlay"><i class="bi bi-play-circle"></i></span>
                 `;
-                fileContent.appendChild(thumbnail);
                 fileContent.appendChild(overlayVideo);
 
                 fileContent.addEventListener("click", ()=> {
