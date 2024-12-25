@@ -993,22 +993,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     imagePreview(file);
                 });
             } else if (file.mimetype.startsWith("video/")) {
-                const blobUrl = URL.createObjectURL(file);
-                generateVideoThumbnail(blobUrl, function (thumbnailUrl) {
-                    const thumbnail = document.createElement('img');
-                    thumbnail.classList.add('video-bubble');
-                    console.log('Thumbnail URL:', thumbnailUrl);
-                    thumbnail.src = `${thumbnailUrl}`;
-
-                    fileContent.appendChild(thumbnail);
-                });
-
-                const overlayVideo = document.createElement('div');
-                overlayVideo.classList.add('overlay-video');
-                overlayVideo.innerHTML = `
-                    <span class="play-overlay"><i class="bi bi-play-circle"></i></span>
+                fileContent.classList.add('d-flex', 'justify-content-between');
+                fileContent.innerHTML = `
+                    <div class="d-flex video-content-icon align-items-center justify-content-center">
+                        <i class="bi bi-play-circle" style="margin: 16px; font-size: 28px;"></i>
+                    </div>
+                    <div class="d-flex flex-column text-start ms-3" style="margin: 8px;">
+                        <div class="video-name">${file.filename}</div>
+                        <div class="video-information">
+                            <div class="video-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
                 `;
-                fileContent.appendChild(overlayVideo);
 
                 fileContent.addEventListener("click", ()=> {
                     videoPreview(file);
