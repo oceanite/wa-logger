@@ -677,6 +677,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.btn-send-file').addEventListener("click", () => {
             sendFile();
             document.querySelector('.file-preview').remove();
+            mediaInput.value = "";
+            loadChatHistory(currentChatroomID);
+            fetchChatrooms();
         });
 
         let padding = 0;
@@ -914,7 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch(`http://localhost:3003/api/send-file`, {
+                const response = await fetch(`http://wa-logger-back.vercel.app/api/send-file`, {
                     method: "POST",
                     body: formData,
                 });
@@ -946,9 +949,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resultMes = await responseMes.json();
                 console.log("Message and file sended successfully:", result, resultMes);
     
-                mediaInput.value = "";
-                loadChatHistory(currentChatroomID);
-                fetchChatrooms();
             } catch (error) {
                 console.error("Error sending file(s):", error);
             }
