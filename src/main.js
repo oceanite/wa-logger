@@ -940,24 +940,24 @@ document.addEventListener('DOMContentLoaded', () => {
                             const textResponse = await response.text();
                             console.log('Response Text:', textResponse);
 
-                            const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify(messageData),
-                            });
-
                             if (!response.ok) {
                                 alert("Failed sending file(s)");
                                 const errorDetails = await response.json();
                                 throw new Error(`Error sending file(s): ${errorDetails.error || response.statusText}`);
                             }
 
-                            if (!responseMes.ok) {
-                                const errorDetails = await responseMes.json();
-                                throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                            }
+                            //const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
+                            //    method: "POST",
+                            //    headers: {
+                            //        "Content-Type": "application/json",
+                            //    },
+                            //    body: JSON.stringify(messageData),
+                            //});
+
+                            //if (!responseMes.ok) {
+                            //    const errorDetails = await responseMes.json();
+                            //    throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                            //}
 
                             const result = await response.json();
                             const resultMes = await responseMes.json();
