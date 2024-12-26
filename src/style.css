@@ -375,6 +375,16 @@ h3 {
     color: white;
 }
 
+.chat-main.dragging {
+    border: 2px dashed #00f;
+    background-color: rgba(0, 0, 255, 0.1);
+}
+
+.file-preview.dragging {
+    border: 2px dashed #00f;
+    background-color: rgba(0, 0, 255, 0.1);
+}
+
 .caption-input {
     resize: none; /* Prevent manual resizing */
     overflow-y: auto; /* Allow vertical scrolling if content overflows */
