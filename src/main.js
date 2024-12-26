@@ -960,8 +960,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             //}
 
                             const result = await response.json();
-                            const resultMes = await responseMes.json();
-                            console.log("Message and file sended successfully:", result, resultMes);
+                            //const resultMes = await responseMes.json();
+                            console.log("Message and file sended successfully:", result);//, resultMes);
 
                             mediaInput.value = "";
                             loadChatHistory(currentChatroomID);
