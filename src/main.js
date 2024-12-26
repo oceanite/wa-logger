@@ -662,6 +662,9 @@ document.addEventListener('DOMContentLoaded', () => {
             dropbox1.addEventListener("dragenter", dragenter, false);
             dropbox1.addEventListener("dragover", dragover, false);
             dropbox1.addEventListener("drop", drop, false);
+            dropbox1.addEventListener("dragenter", () => dropbox.classList.add("dragging"), false);
+            dropbox1.addEventListener("dragleave", () => dropbox.classList.remove("dragging"), false);
+            dropbox1.addEventListener("drop", () => dropbox.classList.remove("dragging"), false);
         }
 
         const fileListContainer = document.getElementById("fileListContainer");
@@ -836,6 +839,9 @@ document.addEventListener('DOMContentLoaded', () => {
     dropbox.addEventListener("dragenter", dragenter, false);
     dropbox.addEventListener("dragover", dragover, false);
     dropbox.addEventListener("drop", drop, false);
+    dropbox.addEventListener("dragenter", () => dropbox.classList.add("dragging"), false);
+    dropbox.addEventListener("dragleave", () => dropbox.classList.remove("dragging"), false);
+    dropbox.addEventListener("drop", () => dropbox.classList.remove("dragging"), false);
 
     function dragenter(e) {
         e.stopPropagation();
@@ -851,13 +857,22 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         e.preventDefault();
         const dt = e.dataTransfer;
-        const files = dt.files;
+        const addFiles = dt.files;
         if (currentChatroomID != null) {
             handleFiles(files);
 
             const dataTransfer = new DataTransfer();
-            [...files].forEach(file => dataTransfer.items.add(file));
-            mediaInput.files += dataTransfer.files;
+
+            // Salin file lama dari mediaInput.files (jika ada)
+            if (mediaInput.files.length > 0) {
+                [...mediaInput.files].forEach(file => dataTransfer.items.add(file));
+            }
+            
+            // Tambahkan file baru dari drag-and-drop
+            [...addFiles].forEach(file => dataTransfer.items.add(file));
+
+            // Perbarui mediaInput.files dengan gabungan file
+            mediaInput.files = dataTransfer.files;
         } else {
             document.getElementById("mediaInput").value = "";
             alert("No chat room currently selected");
