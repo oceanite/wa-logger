@@ -961,22 +961,22 @@ document.addEventListener('DOMContentLoaded', () => {
                                 throw new Error(`Error sending file(s): ${errorDetails.error || response.statusText}`);
                             }
 
-                            //const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
-                            //    method: "POST",
-                            //    headers: {
-                            //        "Content-Type": "application/json",
-                            //    },
-                            //    body: JSON.stringify(messageData),
-                            //});
+                            const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(messageData),
+                            });
 
-                            //if (!responseMes.ok) {
-                            //    const errorDetails = await responseMes.json();
-                            //    throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                            //}
+                            if (!responseMes.ok) {
+                                const errorDetails = await responseMes.json();
+                                throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                            }
 
                             const result = await response.json();
-                            //const resultMes = await responseMes.json();
-                            console.log("Message and file sended successfully:", result);//, resultMes);
+                            const resultMes = await responseMes.json();
+                            console.log("Message and file sended successfully:", result, resultMes);
 
                             mediaInput.value = "";
                             loadChatHistory(currentChatroomID);
