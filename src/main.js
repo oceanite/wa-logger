@@ -859,8 +859,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const dt = e.dataTransfer;
         const addFiles = dt.files;
         if (currentChatroomID != null) {
-            handleFiles(files);
-
             const dataTransfer = new DataTransfer();
 
             // Salin file lama dari mediaInput.files (jika ada)
@@ -873,6 +871,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Perbarui mediaInput.files dengan gabungan file
             mediaInput.files = dataTransfer.files;
+
+            handleFiles(addFiles);
         } else {
             document.getElementById("mediaInput").value = "";
             alert("No chat room currently selected");
