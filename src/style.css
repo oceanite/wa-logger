@@ -242,15 +242,18 @@ h3 {
 .message {
     margin-bottom: 10px;
     width: fit-content;
+    gap: 10px;
 }
 
 .message.received {
     max-width: calc(100% - 300px);
     width: fit-content;
+    margin-left: 0px;
 }
 
 .message.sent {
     max-width: calc(100% - 300px);
+    margin-right: 0px;
     margin-left: auto;
     width: fit-content;
 }
@@ -305,8 +308,19 @@ h3 {
 }
 
 .time-separator {
-    color: #6d807d;
+    padding-bottom: 16px;
+    position: sticky;
+    top: 0%;
+    z-index: 1000;
+}
+
+.time-separator-content {
+    background-color: #1d4840;
+    color: #bcc6c4;
     font-size: 16px;
+    padding: 4px 20px;
+    text-align: center;
+    border-radius: 6px;
 }
 
 .file-preview {
@@ -319,7 +333,7 @@ h3 {
     border: 1px solid #222d2b;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    height: 90%;
+    height: 93%;
     max-width: 1100px;
 }
 
@@ -336,7 +350,6 @@ h3 {
 .file-list {
     gap: 12px;
     margin-left: 10px;
-    margin-top: 10px;
     width: 800px;
     overflow-x: auto; 
     overflow-y: hidden;
@@ -352,6 +365,17 @@ h3 {
 }
 
 .btn-send-file i {
+    font-size: 28px;
+    color: white;
+}
+
+.btn-add-file {
+    width: 100px;
+    height: 100px;
+    border: 1.5px solid;
+}
+
+.btn-add-file i {
     font-size: 28px;
     color: white;
 }
@@ -376,13 +400,13 @@ h3 {
 }
 
 .chat-main.dragging {
-    border: 2px dashed #00f;
-    background-color: rgba(0, 0, 255, 0.1);
+    border: 1.5px dashed #dbdbdb;
+    background-color: rgba(30, 72, 47, 0.1);
 }
 
 .file-preview.dragging {
-    border: 2px dashed #00f;
-    background-color: rgba(0, 0, 255, 0.1);
+    border: 1.5px dashed #dbdbdb;
+    background-color: rgba(30, 72, 47, 0.1);
 }
 
 .caption-input {
@@ -392,14 +416,16 @@ h3 {
     width: 140vh;
     border-radius: 8px;
     border: none;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin-top: 16px;
+    margin-bottom: 8px;
     padding: 10px 16px;
     font-size: 16px;
     color: #e2f6f3;
     background-color: #315952;
     align-items: center;
+    display: flex;
 }
+
 .caption-input::placeholder {
     color: #6d918b;
 }

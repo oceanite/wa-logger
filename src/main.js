@@ -18,6 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear the textarea content 
     chatInputField.value = "";
 
+    // Clear mediaInput everytime the page is refreshed
+    window.addEventListener("load", () => {
+        if (mediaInput) {
+            mediaInput.value = "";
+        }
+    });
+    
+
     function saveDraft(chatroomId, draft) {
         if (chatroomId) {
             localStorage.setItem(`draft_${chatroomId}`, draft);
@@ -397,7 +405,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (formattedDate !== lastDate) {
                 const separator = document.createElement('div');
                 separator.classList.add('time-separator', 'd-flex', 'align-items-center', 'justify-content-center');
-                separator.textContent = formatTimeSeparator(currentDate);
+                separator.innerHTML = `
+                    <div class="time-separator-content align-items-center justify-content-center">${formatTimeSeparator(currentDate)}</div>
+                `;
                 chatBody.appendChild(separator);
                 lastDate = formattedDate; // Update last date
             }
@@ -483,6 +493,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatBody.appendChild(messageDiv);
             }
         });
+
+        setTimeout(() => {
+            chatBody.scrollTo({
+                top: chatBody.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 700);
     }
 
     // Format date for time separator
@@ -620,6 +637,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let fileCount = 0;
     let fileIndex = 0;
+    let selectedFileIndex = 0;
+    let blobUrl;
     function handleFiles(files) {
         const container = document.querySelector('.container-fluid');
         fileCount += files.length;
@@ -634,6 +653,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
+                <div class="d-flex align-items-end justify-content-end" style="padding: 0px 16px;">
+                    <button class="btn btn-remove-file btn-outline-danger d-flex align-items-center justify-content-center">Remove</button>
+                </div>
                 <div class="preview-container d-flex align-items-center justify-content-center">
                     <!-- Insert single file preview here -->
                 </div>
@@ -645,10 +667,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         rows="1"></textarea>
                 </div>
                 <div class="container">
-                    <div class="d-flex justify-content-center" style="gap: 24px;">
+                    <div class="d-flex align-items-center justify-content-center" style="gap: 24px; padding-top: 10px;">
                         <div class="file-list d-flex align-items-center justify-content-center" id="fileListContainer">
                             <!-- File list -->
                         </div>
+                        <button class="btn btn-add-file btn-outline-success d-flex align-items-center justify-content-center">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
                         <button class="btn btn-send-file btn-success d-flex align-items-center justify-content-center">
                             <i class="bi bi-send"></i>
                         </button>
@@ -665,22 +690,43 @@ document.addEventListener('DOMContentLoaded', () => {
             dropbox1.addEventListener("dragenter", () => dropbox.classList.add("dragging"), false);
             dropbox1.addEventListener("dragleave", () => dropbox.classList.remove("dragging"), false);
             dropbox1.addEventListener("drop", () => dropbox.classList.remove("dragging"), false);
+
+            document.querySelector('.btn-clear-preview').addEventListener("click", () => {
+                fileCount = 0;
+                fileIndex = 0;
+                document.querySelector('.file-preview').remove();
+                document.getElementById("mediaInput").value = "";
+                if (blobUrl) {
+                    URL.revokeObjectURL(blobUrl);
+                }
+            });
+    
+            document.querySelector('.btn-remove-file').addEventListener("click", (e) => {
+                e.stopPropagation();
+                removeFile(parseInt(selectedFileIndex));
+            });
+    
+            document.querySelector('.btn-add-file').addEventListener("click", () => {
+                const addFileInput = document.createElement("input");
+                addFileInput.type = "file";
+                addFileInput.accept = "*";
+                addFileInput.multiple = true;
+                addFileInput.onchange = () => {
+                    const newFiles = addFileInput.files;
+                    if (newFiles.length > 0) {
+                        addFile(newFiles);
+                    }
+                };
+                addFileInput.click();
+            });
+    
+            document.querySelector('.btn-send-file').addEventListener("click", () => {
+                sendFile();
+                document.querySelector('.file-preview').remove();
+            });
         }
 
         const fileListContainer = document.getElementById("fileListContainer");
-
-        document.querySelector('.btn-clear-preview').addEventListener("click", () => {
-            document.querySelector('.file-preview').remove();
-            document.getElementById("mediaInput").value = "";
-            URL.revokeObjectURL(blobUrl);
-            fileCount = 0;
-            fileIndex = 0;
-        });
-
-        document.querySelector('.btn-send-file').addEventListener("click", () => {
-            sendFile();
-            document.querySelector('.file-preview').remove();
-        });
 
         let padding = 0;
         if (fileCount === 8) {
@@ -690,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
             padding = 200;
             fileListContainer.style.paddingLeft = `${padding}px`;
         } else if (fileCount > 9) {
-            padding = calc(200 + 112 * (fileCount - 9));
+            padding = (200 + 112 * (fileCount - 9));
             fileListContainer.style.paddingLeft = `${padding}px`;
         }
         
@@ -707,21 +753,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     button.style.backgroundRepeat = "no-repeat";
                     button.style.backgroundPosition = "center";
                     button.dataset.index = fileIndex;
-                    fileIndex++;
                     button.innerHTML = `
                         <span class="remove-media d-none">X</span>
                     `;
         
                     button.addEventListener("click", () => {
                         showFullPreview(file, e.target.result);
+                        selectedFileIndex = button.dataset.index;
                     });
-        
-                    fileListContainer.appendChild(button);
         
                     // Menampilkan preview pertama kali
                     if (index === 0) {
                         showFullPreview(file, e.target.result);
+                        selectedFileIndex = button.dataset.index;
                     }
+
+                    fileListContainer.appendChild(button);
+
+                    fileIndex++;
                 };
                 reader.readAsDataURL(file);
             } else if (file.type.startsWith("video/")) {
@@ -733,7 +782,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 reader.readAsDataURL(file);
 
-                const blobUrl = URL.createObjectURL(file); // Buat Blob URL dari file video
+                blobUrl = URL.createObjectURL(file); // Buat Blob URL dari file video
                 console.log(blobUrl);
             
                 generateVideoThumbnail(blobUrl, function (thumbnail) {
@@ -744,21 +793,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     button.style.backgroundRepeat = "no-repeat";
                     button.style.backgroundPosition = "center";
                     button.dataset.index = fileIndex;
-                    fileIndex++;
                     button.innerHTML = `
                         <span class="remove-media d-none">X</span>
                     `;
             
                     button.addEventListener("click", () => {
                         showFullPreviewVideo(file, blobUrl); // Gunakan Blob URL untuk preview video
+                        selectedFileIndex = button.dataset.index;
                     });
-            
-                    fileListContainer.appendChild(button);
             
                     // Menampilkan preview pertama kali
                     if (index === 0) {
                         showFullPreviewVideo(file, blobUrl); // Gunakan Blob URL untuk preview pertama
+                        selectedFileIndex = button.dataset.index;
                     }
+
+                    fileListContainer.appendChild(button);
+
+                    fileIndex++;
                 });
             }            
             // Jika file bukan image/video
@@ -766,7 +818,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const button = document.createElement("button");
                 button.classList.add('btn', 'file-thumbnail', 'btn-outline-success', 'align-items-center');
                 button.dataset.index = fileIndex;
-                fileIndex++;
                 button.innerHTML = `
                     <i class="bi bi-file-earmark-text" style="font-size: 28px;"></i>
                     <span class="remove-media d-none">X</span>
@@ -774,14 +825,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
                 button.addEventListener("click", () => {
                     showFullPreviewFile(file);
+                    selectedFileIndex = button.dataset.index;
                 });
-        
-                fileListContainer.appendChild(button);
         
                 // Menampilkan preview pertama kali untuk non-image
                 if (index === 0) {
                     showFullPreviewFile(file);
+                    selectedFileIndex = button.dataset.index;
                 }
+
+                fileListContainer.appendChild(button);
+
+                fileIndex++;
             }
         });        
     }
@@ -808,7 +863,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
     }
-    
 
     function showFullPreviewFile(file) {
         console.log("Previewing file:", file.name);
@@ -830,6 +884,74 @@ document.addEventListener('DOMContentLoaded', () => {
         const formattedSize = (bytes / Math.pow(1024, i)).toFixed(2); // Membagi ukuran file dan membulatkan 2 desimal
         
         return `${formattedSize} ${sizes[i]}`;
+    }
+
+    function removeFile(index) {
+        const files = Array.from(mediaInput.files);
+        const removedFile = files[index].name;
+        
+        // Memperbarui daftar file yang ada dengan melewati file yang akan dihapus
+        const updatedFiles = [];
+        for (let i = 0; i < files.length; i++) {
+            if (i !== index) {
+                updatedFiles.push(files[i]);
+            }
+        }
+
+        // Memperbarui isi file di dalam mediaInput
+        const dataTransfer = new DataTransfer();
+        updatedFiles.forEach(file => dataTransfer.items.add(file));
+        mediaInput.files = dataTransfer.files;
+
+        // Mengubah file yang ditampilkan
+        let changeIndex = 1;
+        if (mediaInput.files.length > 0) {
+            if ((index - 1) >= 0) {
+                changeIndex = index - 1;
+            }
+            const changePreview = document.querySelector(`[data-index="${changeIndex}"]`);
+            if (changePreview) {
+                changePreview.click();
+            }
+        } else {
+            fileCount = 0;
+            fileIndex = 0;
+            document.querySelector('.file-preview').remove();
+            if (blobUrl) {
+                URL.revokeObjectURL(blobUrl);
+            }
+        }
+        
+        // Menghapus thumbnail button dari file yang dihapus
+        const currentFileButton = document.querySelector(`[data-index="${index}"]`);
+        if (currentFileButton) {
+            currentFileButton.remove();
+        }
+
+        // Memperbarui dataset index dari thumbnail button yang ada
+        const thumbnailButton = document.querySelectorAll('.file-thumbnail');
+        thumbnailButton.forEach((button, newIndex) => {
+            button.dataset.index = newIndex;
+        });
+
+        if (index === 0) {
+            selectedFileIndex = 0;
+        }
+
+        console.log(`Removed ${removedFile}, current file: `, Array.from(mediaInput.files).map(file => file.name));
+    }
+
+    function addFile(newFiles) {
+        const currentFile = Array.from(mediaInput.files);
+        const dataTransfer = new DataTransfer();
+
+        currentFile.forEach(file => dataTransfer.items.add(file));
+        Array.from(newFiles).forEach(file => dataTransfer.items.add(file));
+        mediaInput.files = dataTransfer.files;
+
+        handleFiles(newFiles);
+
+        console.log("Added file: ", Array.from(newFiles).map(file => file.name));
     }
 
     // Handle drag and drop
@@ -859,16 +981,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const dt = e.dataTransfer;
         const addFiles = dt.files;
         if (currentChatroomID != null) {
+            const currentFile = Array.from(mediaInput.files);
             const dataTransfer = new DataTransfer();
 
             // Salin file lama dari mediaInput.files (jika ada)
-            if (mediaInput.files.length > 0) {
-                [...mediaInput.files].forEach(file => dataTransfer.items.add(file));
+            if (currentFile.length > 0) {
+                currentFile.forEach(file => dataTransfer.items.add(file));
             }
             
             // Tambahkan file baru dari drag-and-drop
-            [...addFiles].forEach(file => dataTransfer.items.add(file));
-
+            Array.from(addFiles).forEach(file => dataTransfer.items.add(file));
             // Perbarui mediaInput.files dengan gabungan file
             mediaInput.files = dataTransfer.files;
 
@@ -887,107 +1009,84 @@ document.addEventListener('DOMContentLoaded', () => {
             let indexTotal = mediaInput.files.length - 1;
             const ID = generateID();
 
-            // Proses file untuk diubah ke base64
-            const filesData = [];
-            Array.from(mediaInput.files).forEach((file, idx) => {
-                const reader = new FileReader();
-                reader.onload = async function (event) {
-                    const base64File = event.target.result.split(",")[1];
-
-                    filesData.push({
-                        filename: file.name,
-                        content: base64File,
-                        mimetype: file.type,
-                        size: file.size,
-                    });
-
-                    // Jika semua file telah diproses kirim data
-                    if (filesData.length === Array.from(mediaInput.files).length) {
-                        const jsonData = {
-                            chatroomID: currentChatroomID,
-                            timestamp: time,
-                            total: indexTotal,
-                            files: filesData,
-                        };
-                        console.log(jsonData);
-
-                        const messageData = {
-                            _data: {
-                                id: {
-                                    fromMe: true,
-                                    remote: currentChatroomID,
-                                    id: ID,
-                                    _serialized: `true_${currentChatroomID}_${ID}`,
-                                },
-                                body: messageContent,
-                                type: "chat",
-                                t: time,
-                                from: thisUserID,
-                                to: currentChatroomID,
-                            },
-                            localId: {
-                                fromMe: true,
-                                remote: currentChatroomID,
-                                id: ID,
-                                _serialized: `true_${currentChatroomID}_${ID}`,
-                            },
-                            mediaKey: `${currentChatroomID}_${time}`,
-                            hasMedia: true,
-                            body: messageContent,
-                            type: "chat",
-                            timestamp: time,
-                            from: thisUserID,
-                            to: currentChatroomID,
-                            deviceType: "web",
-                            fromMe: true,
-                        };
-
-                        try {
-                            const response = await fetch(`https://wa-logger-back.vercel.app/api/send-file`, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify(jsonData),
-                            });
-
-                            // Log response
-                            const textResponse = await response.text();
-                            console.log('Response Text:', textResponse);
-
-                            if (!response.ok) {
-                                alert("Failed sending file(s)");
-                                const errorDetails = await response.json();
-                                throw new Error(`Error sending file(s): ${errorDetails.error || response.statusText}`);
-                            }
-
-                            const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify(messageData),
-                            });
-
-                            if (!responseMes.ok) {
-                                const errorDetails = await responseMes.json();
-                                throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                            }
-
-                            const result = await response.json();
-                            const resultMes = await responseMes.json();
-                            console.log("Message and file sended successfully:", result, resultMes);
-
-                            mediaInput.value = "";
-                            loadChatHistory(currentChatroomID);
-                            fetchChatrooms();
-                        } catch (error) {
-                            console.error("Error sending file(s):", error);
-                        }
-                    }
-                };
-                reader.readAsDataURL(file);
+            const formData = new FormData();
+            Array.from(mediaInput.files).forEach((file) => {
+                formData.append("files", file); // Append file secara langsung
             });
+            formData.append("chatroomID", currentChatroomID);
+            formData.append("timestamp", time);
+            formData.append("total", indexTotal);
+
+            const messageData = {
+                _data: {
+                    id: {
+                        fromMe: true,
+                        remote: currentChatroomID,
+                        id: ID,
+                        _serialized: `true_${currentChatroomID}_${ID}`,
+                    },
+                    body: messageContent,
+                    type: "chat",
+                    t: time,
+                    from: thisUserID,
+                    to: currentChatroomID,
+                },
+                localId: {
+                    fromMe: true,
+                    remote: currentChatroomID,
+                    id: ID,
+                    _serialized: `true_${currentChatroomID}_${ID}`,
+                },
+                mediaKey: `${currentChatroomID}_${time}`,
+                hasMedia: true,
+                body: messageContent,
+                type: "chat",
+                timestamp: time,
+                from: thisUserID,
+                to: currentChatroomID,
+                deviceType: "web",
+                fromMe: true,
+            };
+
+            try {
+                const response = await fetch(`https://wa-logger-back.vercel.app/api/send-file`, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                // Log response
+                const textResponse = await response.text();
+                console.log('Response Text:', textResponse);
+
+                if (!response.ok) {
+                    alert("Failed sending file(s)");
+                    const errorDetails = await response.json();
+                    throw new Error(`Error sending file(s): ${errorDetails.error || response.statusText}`);
+                }
+
+                const responseMes = await fetch(`https://wa-logger-back.vercel.app/api/send`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(messageData),
+                });
+
+                if (!responseMes.ok) {
+                    const errorDetails = await responseMes.json();
+                    throw new Error(`Error sending message: ${errorDetails.error || response.statusText}`);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                }
+
+                const result = await response.json();
+                const resultMes = await responseMes.json();
+                console.log("Message and file sended successfully:", result, resultMes);
+
+                mediaInput.value = "";
+                loadChatHistory(currentChatroomID);
+                fetchChatrooms();
+            } catch (error) {
+                console.error("Error sending file(s):", error);
+            }
         } else {
             alert("No files selected or chatroom not selected.");
         }
@@ -1094,7 +1193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
-                <div class="d-flex align-items-end justify-content-end">
+                <div class="d-flex align-items-end justify-content-end" style="padding: 0px 16px;">
                     <button class="btn btn-download btn-outline-success d-flex align-items-center justify-content-center">
                         <i class="bi bi-download"></i>
                     </button>
@@ -1132,7 +1231,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
-                <div class="d-flex align-items-end justify-content-end">
+                <div class="d-flex align-items-end justify-content-end" style="padding: 0px 16px;">
                     <button class="btn btn-download btn-outline-success d-flex align-items-center justify-content-center">
                         <i class="bi bi-download"></i>
                     </button>
@@ -1168,7 +1267,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const downloadUrl = `https://wa-logger-back.vercel.app/download/${encodeURIComponent(file.storedName)}`;
+        const downloadUrl = `https://wa-logger-back.vercel.app/download/${file.storedName}`;
 
         // Create <a> to trigger download
         const link = document.createElement('a');
